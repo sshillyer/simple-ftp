@@ -15,6 +15,7 @@
 #ifndef SSHILLYER_CHAT_H
 #define SSHILLYER_CHAT_H
 
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -27,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
+#include <sys/unistd.h>
 
 // Constants
 #define MIN_PORT_NUMBER 1
@@ -35,6 +36,8 @@
 #define BUF_HANDLE 12
 #define BUF_SIZE 513
 #define BUF_MSG 500
+#define MAX_FILENAME_LEN 500
+
 // 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
 /*******************************************************************************

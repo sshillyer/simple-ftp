@@ -15,40 +15,22 @@
 from socket import *
 import sys
 
-if len(sys.argv) < 5:
-	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
+if len(sys.argv) != 2:
+	print("Usage: python3 ftserv serverPort")
 	quit()
 
-serverHost = str(sys.argv[1])
-serverPort = int(str(sys.argv[2]))
-command = str(sys.argv[3])
+serverPort = int(str(sys.argv[1]))
 
-# Parse the filename only if command is to -g (get)
-if command == "-l" and len(sys.argv) == 5:
-	dataPort = int(str(sys.argv[4]))
-elif command == "-g" and len(sys.argv) == 6:
-	fileName = str(sys.argv[4])
-	dataPort = int(str(sys.argv[5]))
-else:
-	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
-
-# TODO: Validate all of the arguments (Be sure to modularize and write functions)
-
-
-
-# END VALIDATION SECTION
-
-# Next, open the socket and connect to the server
-# Cite: PER Pg 451 : a 6 line client that receives time from a server
 serverSocket = socket(AF_INET, SOCK_STREAM)
-serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname and the port #
+serverSocket.bind(('', serverPort))
+# serverSocket.connect((serverHost, serverPort))  # accepts a tuple, the hostname and the port # as an int
+serverSocket.listen(5)
 
-
+while True:
+	client, addr = serverSocket.accept()
+	print("Got a connection from %s", str(addr))
 # Once connected, send the command and the dataPort we wish to use
-print("Hi from line 48")
-# serverSocket.sendall(str(command).encode())
-serverSocket.send("-l".encode())
-print("Hi from after sendall")
+
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
 # If those are okay, we ack the response and start listening on dataPort
