@@ -110,20 +110,36 @@ int main(int argc, char const *argv[]) {
 		len = sizeof addr;
 		getpeername(control_sfd, (struct sockaddr*)&addr, &len);
 
+
 		// deal with both IPv4 and IPv6:
 		if (addr.ss_family == AF_INET) {
 			struct sockaddr_in *s = (struct sockaddr_in *)&addr;
 			client_port = ntohs(s->sin_port);
 			inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+			// getnameinfo(s, s->ai_addrlen, host, sizeof host, service, sizeof service, 0);
 		} 
 		else { // AF_INET6
 			struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
 			client_port = ntohs(s->sin6_port);
 			inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+			// getnameinfo(s, sizeof &s, host, service, sizeof service, 0);
 		}
 		// END RIP
+		
+		memset(&hints, 0, sizeof hints);  // clear out the hints struct for safety
+		hints.ai_family = AF_INET;        // AF_UNSPEC would be unspecified IPv4 or IPv6
+		hints.ai_socktype = SOCK_STREAM;  // Use TCP -- need 2-way communication
+		hints.ai_flags = AI_CANONNAME;      // fill in localhost ip
+		if ( (status = getaddrinfo(ipstr, port_str, &hints, &servinfo)) != 0) {
+			perror_exit("getaddrinfo", EXIT_FAILURE);
+		}
 
-		printf("Connection from %d\n", port); // Wonder if we can bind the client to use the same port to send??
+		char client_name[1024];
+		if (servinfo->ai_canonname != NULL)
+			strncpy(client_name, servinfo->ai_canonname, 1023);
+		client_name[1023] = '\0';
+
+		printf("Connection from %s\n", client_name); // Wonder if we can bind the client to use the same port to send??
 
 		// Parse the incoming command
 		// client_message is freed before the "chat loop" ends; not doing causes excess left in string
@@ -134,8 +150,9 @@ int main(int argc, char const *argv[]) {
 			client_message[z] = '\0';
 		}
 
-		printf("About to call read()\n");
+		// printf("About to call read()\n");
 		
+
 		// Cite: Handling recv() from Beej's page 39-40
 		int bytes_transmitted;
 		if (bytes_transmitted = recv(control_sfd, client_message, sizeof client_message, 0) <= 0) {
@@ -145,26 +162,28 @@ int main(int argc, char const *argv[]) {
 			}
 			else {
 				perror("recv");
-				break;
 			}
+			close(control_sfd);
+			break;
 		}
+		bytes_transmitted = 0;
+		// printf("Right after read()\n");
 
-
-		printf("Right after read()\n");
-		if (bytes_transmitted == -1) {
-			perror("read");
-			exit(EXIT_FAILURE);
-		}
-
-		printf("calling strcmp(client_message, -l\n");
 		int commandIsList = 0;
+		int commandIsGet = 0;
+
 		if (strcmp(client_message, "-l") == 0) {
-			printf("client_message == -l\n");
+			// printf("client_message == -l\n");
 			commandIsList = 1;
 		}
-		printf("client_message=%s\nManual Newline was placed right before me and after\n", client_message);
-
-		// if command is not valid, send error message on control_sfd to client, close open socket P, continue while()
+		else if (strcmp(client_message, "-g") == 0) {
+			commandIsGet = 1;
+		}
+		// else if command is not valid, send error message on control_sfd to client, close open socket P, continue while()
+		else {
+			char * invalid_command_msg = "Invalid command";
+			safe_transmit_msg_on_socket(control_sfd, invalid_command_msg, sizeof invalid_command_msg, WRITE_MODE);
+		}
 
 		// get/open a second connection, assign it to data_sfd, connecting back to clients ip and using <dataport> (which it sent over)
 
@@ -174,8 +193,6 @@ int main(int argc, char const *argv[]) {
 			// send the info!
 		}
 
-		// if client sent -g <FILENAME>
-		int commandIsGet = 0;
 		char * file_name = malloc(sizeof (char *) * MAX_FILENAME_LEN);
 		file_name = "hardcoded.txt";
 		if(commandIsGet) {

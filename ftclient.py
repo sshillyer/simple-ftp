@@ -34,6 +34,7 @@ elif command == "-g" and len(sys.argv) == 6:
 	dataPort = int(str(sys.argv[5]))
 else:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
+	quit()
 
 
 # DEBUG statements: Echo the variables read in:

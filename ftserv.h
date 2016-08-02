@@ -38,7 +38,9 @@
 #define BUF_SIZE 513
 #define BUF_MSG 500
 #define MAX_FILENAME_LEN 500
-
+#define READ_MODE 1
+#define WRITE_MODE 2
+                
 // 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
 /*******************************************************************************
