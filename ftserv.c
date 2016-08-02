@@ -40,11 +40,9 @@ int main(int argc, char const *argv[]) {
 	// Verify Arguments are valid, print error message if not
 	check_argument_count(argc, 2, "Usage: ftserv port\n");
 
-
 	// Parse and validate port, save port as a string for loading address
 	int port = convert_string_to_int(argv[1]);
 	validate_port(port, errno);
-
 
 	// Variables for sockets and the server address (See page 16 of beej guide)
 	int sfd, control_sfd, data_sfd, status; 
@@ -64,14 +62,12 @@ int main(int argc, char const *argv[]) {
 		perror_exit("getaddrinfo", EXIT_FAILURE);
 	}
 
-
-	// Now open a TCP socket stream; Cite: Slide 10 Unix Networking 2 (lecture)
+	// Now open a TCP socket stream; Cite: Slide 10 Unix Networking 2 (CS 340 lecture)
 	// Cite: Beej network guide for using hints structure, page 
 	// Must be called after getaddrinfo() so that servinfo struct is populated
 	if ((sfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
 		perror_exit("socket", EXIT_FAILURE);
 	}
-
 
 	// Next, bind socket (sfd) to a port (See beej page 20)
 	if (bind(sfd, servinfo->ai_addr, servinfo->ai_addrlen) == 01) {
@@ -83,25 +79,23 @@ int main(int argc, char const *argv[]) {
 	gethostbyname(myhostname);
 	printf("Server open on %s:%d\n", myhostname, port);
 
-	// Inspired by beej guide page 29)
+	// Cite: Some concepts from Beej guide page 29
 	while(1) {
 		// Listen for connections (Beej's guide 22-23)
 		if (listen(sfd, 5) == -1) {
 			perror_exit("listen", EXIT_FAILURE);
 		}
 
-		// Accept the connection
+		// Accept a connection
 		addr_size = sizeof client_addr;
-		// if (control_sfd = accept(sfd, (struct sockaddr *)&client_addr, &addr_size) == -1) {
+
 		if ((control_sfd = accept(sfd, (struct sockaddr *)&client_addr, &addr_size)) == -1) {
 			perror_exit("accept", EXIT_FAILURE);
 		}
-		printf("accept() called, control_sfd = %d\n", control_sfd);
 	
 		// Figure out who connected and print it to screen (should be stored in )
 		// populate servinfo using the hints struct (Cite beej pg. 15-26 sample)
-		// THIS BLOCK FROM PAGE 79 - Seemed best way to get the info
-		// TODO: Convert the block to a function (make sure to credit!)
+// THIS BLOCK FROM PAGE 79 - Seemed best way to get the info
 		socklen_t len;
 		struct sockaddr_storage addr;
 		char ipstr[INET6_ADDRSTRLEN];  // String to store iP in
@@ -110,22 +104,20 @@ int main(int argc, char const *argv[]) {
 		len = sizeof addr;
 		getpeername(control_sfd, (struct sockaddr*)&addr, &len);
 
-
 		// deal with both IPv4 and IPv6:
 		if (addr.ss_family == AF_INET) {
 			struct sockaddr_in *s = (struct sockaddr_in *)&addr;
 			client_port = ntohs(s->sin_port);
 			inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
-			// getnameinfo(s, s->ai_addrlen, host, sizeof host, service, sizeof service, 0);
 		} 
 		else { // AF_INET6
 			struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
 			client_port = ntohs(s->sin6_port);
 			inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
-			// getnameinfo(s, sizeof &s, host, service, sizeof service, 0);
 		}
-		// END RIP
+// END BORROWED SEGMENT
 		
+		// This in theory should ask for the canonical name but doesn't appear to work
 		memset(&hints, 0, sizeof hints);  // clear out the hints struct for safety
 		hints.ai_family = AF_INET;        // AF_UNSPEC would be unspecified IPv4 or IPv6
 		hints.ai_socktype = SOCK_STREAM;  // Use TCP -- need 2-way communication
@@ -138,6 +130,7 @@ int main(int argc, char const *argv[]) {
 		if (servinfo->ai_canonname != NULL)
 			strncpy(client_name, servinfo->ai_canonname, 1023);
 		client_name[1023] = '\0';
+		// END PARSING CANONICAL NAME
 
 		printf("Connection from %s\n", client_name); // Wonder if we can bind the client to use the same port to send??
 
@@ -150,7 +143,6 @@ int main(int argc, char const *argv[]) {
 			client_message[z] = '\0';
 		}
 
-		// printf("About to call read()\n");
 		
 
 		// Cite: Handling recv() from Beej's page 39-40
@@ -173,7 +165,6 @@ int main(int argc, char const *argv[]) {
 		int commandIsGet = 0;
 
 		if (strcmp(client_message, "-l") == 0) {
-			// printf("client_message == -l\n");
 			commandIsList = 1;
 		}
 		else if (strcmp(client_message, "-g") == 0) {
@@ -186,6 +177,7 @@ int main(int argc, char const *argv[]) {
 		}
 
 		// get/open a second connection, assign it to data_sfd, connecting back to clients ip and using <dataport> (which it sent over)
+
 
 		// if client sent -l command, send dir() listing to client
 		if(commandIsList) {
