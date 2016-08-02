@@ -92,7 +92,8 @@ int main(int argc, char const *argv[]) {
 
 		// Accept the connection
 		addr_size = sizeof client_addr;
-		if (control_sfd = accept(sfd, (struct sockaddr *)&client_addr, &addr_size) == -1) {
+		// if (control_sfd = accept(sfd, (struct sockaddr *)&client_addr, &addr_size) == -1) {
+		if ((control_sfd = accept(sfd, (struct sockaddr *)&client_addr, &addr_size)) == -1) {
 			perror_exit("accept", EXIT_FAILURE);
 		}
 		printf("accept() called, control_sfd = %d\n", control_sfd);
@@ -134,15 +135,28 @@ int main(int argc, char const *argv[]) {
 		}
 
 		printf("About to call read()\n");
-		// Receive client_message from server, print to screen if client_message not '\quit'
-		int bytes_transmitted = read(control_sfd, client_message, BUF_SIZE);
+		
+		// Cite: Handling recv() from Beej's page 39-40
+		int bytes_transmitted;
+		if (bytes_transmitted = recv(control_sfd, client_message, sizeof client_message, 0) <= 0) {
+			if (bytes_transmitted == 0) {
+				// Connection closed by client
+				printf("client disconnected\n");
+			}
+			else {
+				perror("recv");
+				break;
+			}
+		}
+
+
 		printf("Right after read()\n");
 		if (bytes_transmitted == -1) {
 			perror("read");
 			exit(EXIT_FAILURE);
 		}
 
-		printf("caling strcmp(client_message, -l\n");
+		printf("calling strcmp(client_message, -l\n");
 		int commandIsList = 0;
 		if (strcmp(client_message, "-l") == 0) {
 			printf("client_message == -l\n");
