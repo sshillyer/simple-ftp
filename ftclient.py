@@ -45,10 +45,12 @@ serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname 
 
 
 # Once connected, send the command and the dataPort we wish to use
-print("Hi from line 48")
-# serverSocket.sendall(str(command).encode())
-serverSocket.send("-l".encode())
+print("Command was: " + command)
+serverSocket.send(str(command).encode('ascii'))
+# serverSocket.send("-l".encode())
+
 print("Hi from after sendall")
+
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
 # If those are okay, we ack the response and start listening on dataPort

@@ -1,19 +1,20 @@
 /*******************************************************************************
-* File:         chatclient.h
+* File:         ftserv.h
 * Author:       Shawn S Hillyer
 * Date:         July 11, 2016
 * Course:       OSU CSS 372: Project 1
 *
-* Description:  Include headers, constants, & common functions for chat client
+* Description:  Include headers, constants, & common functions for file transfer
+*               server
 *               
-* Usage:        #include <"chatclient.h">
+* Usage:        #include <"ftserv.h">
 *               
 * Cite:         Overall flow of a socket-based client/server pair of programs: 
                 beej.us/guide/bgipc/output/html/multipage/unixsock.html  
 *******************************************************************************/
 
-#ifndef SSHILLYER_CHAT_H
-#define SSHILLYER_CHAT_H
+#ifndef SSHILLYER_FTSERV_H
+#define SSHILLYER_FTSERV_H
 
 #include <arpa/inet.h>
 #include <ctype.h>

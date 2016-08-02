@@ -95,6 +95,7 @@ int main(int argc, char const *argv[]) {
 		if (control_sfd = accept(sfd, (struct sockaddr *)&client_addr, &addr_size) == -1) {
 			perror_exit("accept", EXIT_FAILURE);
 		}
+		printf("accept() called, control_sfd = %d\n", control_sfd);
 	
 		// Figure out who connected and print it to screen (should be stored in )
 		// populate servinfo using the hints struct (Cite beej pg. 15-26 sample)
@@ -132,11 +133,20 @@ int main(int argc, char const *argv[]) {
 			client_message[z] = '\0';
 		}
 
+		printf("About to call read()\n");
 		// Receive client_message from server, print to screen if client_message not '\quit'
 		int bytes_transmitted = read(control_sfd, client_message, BUF_SIZE);
+		printf("Right after read()\n");
 		if (bytes_transmitted == -1) {
-			// perror("read");
+			perror("read");
 			exit(EXIT_FAILURE);
+		}
+
+		printf("caling strcmp(client_message, -l\n");
+		int commandIsList = 0;
+		if (strcmp(client_message, "-l") == 0) {
+			printf("client_message == -l\n");
+			commandIsList = 1;
 		}
 		printf("client_message=%s\nManual Newline was placed right before me and after\n", client_message);
 
@@ -145,7 +155,6 @@ int main(int argc, char const *argv[]) {
 		// get/open a second connection, assign it to data_sfd, connecting back to clients ip and using <dataport> (which it sent over)
 
 		// if client sent -l command, send dir() listing to client
-		int commandIsList = 1;
 		if(commandIsList) {
 			printf("List directory requested on port %d\n", data_port);
 			// send the info!
