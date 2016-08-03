@@ -247,7 +247,7 @@ int get_socket_bind_to_port(const char * ip, const char * port) {
 }
 
 
-int get_socket_no_bind_to_port(const char * ip, const char * port) {
+int get_socket_connect_on_port(const char * ip, const char * port) {
 	// Variables used in getaddrinfo() call
 	int status,
 	    sfd; // socket file descriptor
@@ -269,6 +269,12 @@ int get_socket_no_bind_to_port(const char * ip, const char * port) {
 	if (sfd == -1) {
 		fprintf(stderr, "socket did not return valid socket\n");
 		return sfd;
+	}
+
+	status = connect(sfd, res->ai_addr, res->ai_addrlen);
+	if (status == -1) {
+		perror("connect");
+		return status;
 	}
 
 	// Free the response from getaddrinfo
