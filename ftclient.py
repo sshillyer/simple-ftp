@@ -79,17 +79,6 @@ if command == "-l":
 	print("Receiving directory structure from " + serverHost + ":" + str(dataPort))
 	isMoreData = True
 	ack = "ACK"
-
-	# Make sure file doesn't exist locally, give it a new name if it does
-	originalFN = fileName
-	updated = False
-	i = 0
-	while (os.path.isfile(fileName)):
-		i = i + 1
-		fileName = originalFN + str(i)
-		updated = True
-	if updated == True:
-		print("Filename \"" + originalFN + "\" exists. Updating copied file name to " + fileName)
 	
 	# Read data from connection Q (Data connection) until no more lines
 	while isMoreData:
@@ -115,6 +104,17 @@ elif command == "-g":
 	response = controlSocket.recv(1024)
 	response = response.decode()
 	ack = "ACK"
+
+	# Make sure file doesn't exist locally, give it a new name if it does
+	originalFN = fileName
+	updated = False
+	i = 0
+	while (os.path.isfile(fileName)):
+		i = i + 1
+		fileName = originalFN + str(i)
+		updated = True
+	if updated == True:
+		print("Filename \"" + originalFN + "\" exists. Updating copied file name to " + fileName)
 
 	if response == ack:
 		isMoreData = True
