@@ -70,10 +70,19 @@ int main(int argc, char const *argv[]) {
 		if (command_is_valid(command_type)) {
 			printf("Command is valid.\n");
 			send_string_on_socket(control_sfd, "DATAPORT?");
+
+			// Read the dataport from client
+			if (receive_string_from_client(control_sfd, control_message) == -1) {
+				fprintf(stderr, "Unable to read string from client\n");
+				close(control_sfd);
+				continue;
+			}
+			printf("Client sent dataport # as string: %s\n", control_message);
 		}
 		else {
 			// Send error message on control socket
 			send_string_on_socket(control_sfd, "Invalid command");
+			close(control_sfd);
 		}
 		// send_string_on_socket(control_sfd, "Hello world");
 

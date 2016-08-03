@@ -43,39 +43,18 @@ command.rstrip('\n') # prob not necessary
 if serverSocket.sendall(command.encode()) != None:
 	print("sendall failed")
 
+# The respone here worked:
+response = serverSocket.recv(1024)
+response = response.decode()
 
-# commandtest = '-l'
-# commandtest.rstrip('\n')
-# serverSocket.sendall(commandtest.encode())
+print("Response:")
+print(response)
 
-# Send command to the server
-# command.rstrip('\n') # prob not necessary
-# print("About to send command: " + command)
-# if serverSocket.send(command.encode()) != None:
-# 	print("sendall failed")
-# else:
-# 	print("It worked")
-
-
-
-# # The respone here worked:
-# response = serverSocket.recv(1024)
-# print("Response:")
-# print(response.decode())
-
-
-
-# response = ''
-# print("Response:")
-
-# response.decode()
-# print("Response:")
-# print(response)
-
-# if response == "GET DATAPORT":
-# 	print("Server wants the data port #")
-# 	print("Sending: '" + str(dataPort) + "'")
-# 	serverSocket.sendall(str(dataPort).encode())
+# Send dataport if asked, otherwise something went wrong.
+if response == "DATAPORT?":
+	print("Server wants the data port #")
+	print("Sending: '" + str(dataPort) + "'")
+	serverSocket.sendall(str(dataPort).encode())
 
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
