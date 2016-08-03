@@ -84,6 +84,7 @@ if command == "-l":
 			isMoreData = False
 		else:
 			print(response)
+	# dataConnection.close()
 
 
 # Our protocol will wait for the control connection on serverSocket to send a

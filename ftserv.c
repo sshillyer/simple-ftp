@@ -110,6 +110,7 @@ int main(int argc, char const *argv[]) {
 
 		// Command was valid - open the data_connection. 
 		printf("DEBUG STATEMENT: attempting to get_socket_connect_on_port(%s, %s)\n", client_ip_str, data_port_str);
+		
 		data_sfd = get_socket_connect_on_port(client_ip_str, data_port_str);
 		if (data_sfd == -1 ) {
 			printf("DEBUG STATEMENT: Error connecting on that port.\n");
@@ -119,10 +120,11 @@ int main(int argc, char const *argv[]) {
 
 		printf("DEBUG STATEMENT: data_sfd = %d\n", data_sfd);
 
-		send_string_on_socket(data_sfd, "DataConnection string");
-
+		// Send the directory contents to ftclient on data connection Q
 		if (command_type == LIST_COMMAND) {
 			printf("List directory requested on port %d.\n", data_port);
+			printf("Sending directory contents to %s:%s\n", client_ip_str, data_port_str);
+			send_directory_contents(data_sfd);
 		}
 
 

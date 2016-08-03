@@ -18,6 +18,7 @@
 
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <limits.h>
 #include <netdb.h>
@@ -331,7 +332,29 @@ int command_is_valid(int command_type) {
 		return 0;
 }
 
-// int send_directory_contents
+int send_directory_contents(int sfd) {
+	char * end_of_dir_msg = "FTCLIENT END DIR LIST";
+
+	// This partial segment is based on gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Simple-Directory-Lister.html)
+	DIR *dp;
+	struct dirent *ep;
+
+	dp = opendir ("./");
+	if (dp != NULL) {
+		while (ep = readdir (dp)) {
+			send_string_on_socket(sfd, ep->d_name);
+		}
+		(void) closedir (dp);
+	}
+	else {
+		perror("Couldn't open the directory\n");
+		return -1;
+	}
+
+	send_string_on_socket(sfd, end_of_dir_msg);
+
+	return 0; // success
+}
 
 
 // Cite: This function borrowed from Page 28 of Beej guide
