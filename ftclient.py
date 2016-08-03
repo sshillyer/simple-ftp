@@ -88,6 +88,7 @@ if command == "-l":
 		else:
 			print(response)
 			dataConnection.sendall(ack.encode()) # This is a trick I used to force each row to be sent separately
+	# Clean up
 	dataConnection.close() # ftclient closes connection P
 	dataSocket.close()
 	controlSocket.close() # Backup in case ftserv doesn't close connection Q
@@ -96,6 +97,12 @@ if command == "-l":
 elif command == "-g":
 	# Send the filename to server to validate it exists
 	controlSocket.sendall(str(fileName).encode())
+
+	# Clean up
+	dataConnection.close() # ftclient closes connection P
+	dataSocket.close()
+	controlSocket.close() # Backup in case ftserv doesn't close connection Q
+	quit()
 
 # Our protocol will wait for the control connection on controlSocket to send a
 # response that states the command is good and the filename (if -g command) is good

@@ -336,7 +336,7 @@ int send_directory_contents(int sfd) {
 	char * end_of_dir_msg = "FTCLIENT END DIR LIST";
 	char ackdump[10];
 
-	// This partial segment is based on gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Simple-Directory-Lister.html)
+	// Citation: gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Simple-Directory-Lister.html)
 	DIR *dp;
 	struct dirent *ep;
 
@@ -344,7 +344,7 @@ int send_directory_contents(int sfd) {
 	if (dp != NULL) {
 		while (ep = readdir (dp)) {
 			send_string_on_socket(sfd, ep->d_name);
-			receive_string_from_client(sfd, ackdump);
+			receive_string_from_client(sfd, ackdump); // Trick to chunk the write() calls
 		}
 		(void) closedir (dp);
 	}
@@ -368,5 +368,8 @@ void *get_in_addr(struct sockaddr *sa) {
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+int is_file_readable(const char * filename) {
+	return access(filename, R_OK);
+}
 
 #endif

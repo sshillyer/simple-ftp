@@ -156,6 +156,12 @@ int main(int argc, char const *argv[]) {
 			}
 
 			printf("File \"%s\" requested on port %d.\n", file_name, data_port);
+			if (is_file_readable(file_name)) {
+				printf("File is readable.\n");
+			}
+			else {
+				printf("File is not readable.\n");
+			}
 		}
 
 
