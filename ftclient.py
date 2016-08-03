@@ -14,6 +14,7 @@
 
 from socket import *
 import sys
+import os.path
 
 if len(sys.argv) < 5:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
@@ -78,6 +79,16 @@ if command == "-l":
 	print("Receiving directory structure from " + serverHost + ":" + str(dataPort))
 	isMoreData = True
 	ack = "ACK"
+
+	updated = False
+	i = 0
+	while (os.path.exists(fileName)):
+		i = i + 1
+		updated = True
+	
+	if updated == True:
+		printf("Filename \"" + fileName + "\" exists. Updating to " + (str(i) + fileName))
+		fileName = str(i) + fileName
 	
 	while isMoreData:
 		response = dataConnection.recv(1024)
@@ -109,13 +120,13 @@ elif command == "-g":
 			response = dataConnection.recv(1024)
 			response = response.decode()
 			if "FTSERVBYE" in response:
-				print("DEBUG STATEMENT: Server done sending file.")
+				print("File transfer complete.")
 				isMoreData = False
 			else:
 				print(response)
 				dataConnection.sendall(ack.encode()) # This is a trick I used to force each row to be sent separately
 	elif response == "NEG":
-		print(serverHost + ":" + serverPort + " says FILE NOT FOUND")
+		print(serverHost + ":" + str(serverPort) + " says FILE NOT FOUND")
 
 	# Clean up
 	dataConnection.close() # ftclient closes connection P
