@@ -343,6 +343,7 @@ int send_directory_contents(int sfd) {
 	if (dp != NULL) {
 		while (ep = readdir (dp)) {
 			send_string_on_socket(sfd, ep->d_name);
+			send_string_on_socket(sfd, "\n");
 		}
 		(void) closedir (dp);
 	}

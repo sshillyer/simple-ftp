@@ -82,9 +82,11 @@ if command == "-l":
 		response = response.decode()
 		if response == "FTCLIENT END DIR LIST":
 			isMoreData = False
+			dataConnection.close()
+			quit()
+			break
 		else:
 			print(response)
-	# dataConnection.close()
 
 
 # Our protocol will wait for the control connection on serverSocket to send a
