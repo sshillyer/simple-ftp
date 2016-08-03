@@ -86,7 +86,7 @@ if command == "-l":
 			quit()
 			break
 		else:
-			print(response)
+			print("\n" + response)
 
 
 # Our protocol will wait for the control connection on serverSocket to send a

@@ -103,7 +103,7 @@ int main(int argc, char const *argv[]) {
 		}
 		else {
 			// Command not valid; send error message on control connection
-			// send_string_on_socket(control_sfd, "Invalid command");
+			send_string_on_socket(control_sfd, "Invalid command");
 			// close(control_sfd); // ftclient closes the connection P
 			continue;
 		}
