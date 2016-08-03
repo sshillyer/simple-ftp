@@ -334,6 +334,7 @@ int command_is_valid(int command_type) {
 
 int send_directory_contents(int sfd) {
 	char * end_of_dir_msg = "FTCLIENT END DIR LIST";
+	char ackdump[10];
 
 	// This partial segment is based on gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Simple-Directory-Lister.html)
 	DIR *dp;
@@ -343,7 +344,7 @@ int send_directory_contents(int sfd) {
 	if (dp != NULL) {
 		while (ep = readdir (dp)) {
 			send_string_on_socket(sfd, ep->d_name);
-			send_string_on_socket(sfd, "\n");
+			receive_string_from_client(sfd, ackdump);
 		}
 		(void) closedir (dp);
 	}
@@ -352,7 +353,7 @@ int send_directory_contents(int sfd) {
 		return -1;
 	}
 
-	send_string_on_socket(sfd, end_of_dir_msg);
+	send_string_on_socket(sfd, "FTSERVBYE");
 
 	return 0; // success
 }

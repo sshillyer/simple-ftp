@@ -80,14 +80,14 @@ if command == "-l":
 	while isMoreData:
 		response = dataConnection.recv(1024)
 		response = response.decode()
-		if "FTCLIENT END DIR LIST" in response:
+		if "FTSERVBYE" in response:
 			print("DEBUG STATEMENT: Server done sending directory listing.")
 			isMoreData = False
 			dataConnection.close()
 			quit()
-			break
 		else:
 			print("\n" + response)
+			dataConnection.sendall("ACK")
 
 
 # Our protocol will wait for the control connection on serverSocket to send a
