@@ -55,6 +55,15 @@ if response == "DATAPORT?":
 	print("Server wants the data port #")
 	print("Sending: '" + str(dataPort) + "'")
 	serverSocket.sendall(str(dataPort).encode())
+elif response == "DATAPORT ERR":
+	print("Error sending dataport to server; unable to process request.")
+	serverSocket.close()
+	quit()
+elif response == "Invalid command":
+	print("Invalid command sent to server; unable to process request.")
+	serverSocket.close()
+	quit()
+
 
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good

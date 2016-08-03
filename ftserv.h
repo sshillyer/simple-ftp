@@ -294,4 +294,6 @@ int command_is_valid(int command_type) {
 		return 0;
 }
 
+// int send_directory_contents
+
 #endif
