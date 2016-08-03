@@ -93,7 +93,7 @@ if command == "-l":
 	controlSocket.close() # Backup in case ftserv doesn't close connection Q
 	quit()
 
-elfif command == "-g":
+elif command == "-g":
 	# Send the filename to server to validate it exists
 	controlSocket.sendall(str(fileName).encode())
 
