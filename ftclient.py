@@ -12,8 +12,8 @@
 #               Pyton Essential Reference - 4th Edition  ("PER")
 ################################################################################
 
+from socket import *
 import sys
-import socket
 
 if len(sys.argv) < 5:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
@@ -33,21 +33,26 @@ else:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
 	quit()
 
-serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname and the port #
 
-command.rstrip('\n') # prob not necessary
-
+# Send command to the server
 if serverSocket.sendall(command.encode()) != None:
 	print("sendall failed")
 
-response = ''
-print("Response:")
 response = serverSocket.recv(1024)
 print("Response:")
-response.decode()
-print("Response:")
-print(response)
+print(response.decode())
+
+# command.rstrip('\n') # prob not necessary
+
+
+# response = ''
+# print("Response:")
+
+# response.decode()
+# print("Response:")
+# print(response)
 
 # if response == "GET DATAPORT":
 # 	print("Server wants the data port #")

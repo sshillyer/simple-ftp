@@ -35,7 +35,7 @@
 #define MIN_PORT_NUMBER 1
 #define MAX_PORT_NUMBER 65535
 #define BUF_HANDLE 12
-#define BUF_SIZE 513
+#define BUF_SIZE 1024
 #define BUF_MSG 500
 #define MAX_FILENAME_LEN 500
 #define READ_MODE 1
@@ -234,7 +234,6 @@ int get_socket_bind_to_port(const char * ip, const char * port) {
 		fprintf(stderr, "bind failed to bind socket\n");
 	}
 
-
 	// Free the response from getaddrinfo
 	freeaddrinfo(res);
 
@@ -242,26 +241,25 @@ int get_socket_bind_to_port(const char * ip, const char * port) {
 	return sfd; 
 }
 
-
-// Cite: Beej page 23
-int listen_and_accept_on_socket(int sfd) {
-	int backlog = 5; // maximum connections to listen for and backlog
-	listen(sfd, backlog);
-
-	struct sockaddr_storage their_addr;
-	socklen_t addr_size;
-	int new_fd;
-
-	addr_size = sizeof their_addr;
-
-	while (1) {
-		new_fd = accept(sfd, (struct sockaddr *)&their_addr, &addr_size);
+void clear_buff(char * buff) {
+	int len = strlen(buff);
+	int i;
+	for (i = 0; i < len; i++) {
+		buff[i] = '\0';
 	}
-
-	
-
 }
 
+void send_string_on_socket(int sfd, char * msg) {
+	int len = strlen(msg);
+	safe_transmit_msg_on_socket(sfd, msg, len, WRITE_MODE);
+}
+
+void receive_command_from_client(int sfd, char * buffer) {
+	safe_transmit_msg_on_socket(sfd, buffer, BUF_SIZE, READ_MODE);
+	// DEBUG LINE:
+	printf("receive_command_from_client(%d, buffer) got:\n", sfd);
+	printf("%s", buffer);
+}
 
 
 #endif

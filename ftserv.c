@@ -31,21 +31,33 @@ int main(int argc, char const *argv[]) {
 	validate_port(port, errno);
 
 	// Set up a "listening" socket to listen for connections on port passed in
-	int listening_sfd = get_socket_bind_to_port(NULL, port_str);
+	int listening_sfd,
+	    control_sfd;
 	int backlog = 5; // maximum connections to listen for and backlog
+
+	listening_sfd = get_socket_bind_to_port(NULL, port_str);
 	listen(listening_sfd, backlog);
 
 	struct sockaddr_storage their_addr;
 	socklen_t addr_size;
-	int control_socket;
-
-	addr_size = sizeof their_addr;
 
 	while (1) {
-		control_socket = accept(listening_sfd, (struct sockaddr *)&their_addr, &addr_size);
+		// Cite: Beej's guide page 24-ish, and pg 28-29
+		addr_size = sizeof their_addr;
+		char control_message[BUF_SIZE];
 
+		// Create control connection ("P")
+		control_sfd = accept(listening_sfd, (struct sockaddr *)&their_addr, &addr_size);
+		if (control_sfd == -1) {
+			// Error out if accept fails and loop again listening for more
+			perror("accept");
+			continue;
+		}
 
-		close(control_socket);
+		receive_command_from_client(control_sfd, control_message);
+		send_string_on_socket(control_sfd, "Hello world");
+
+		close(control_sfd);
 	}
 
 	close(listening_sfd);
