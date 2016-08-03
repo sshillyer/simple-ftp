@@ -32,7 +32,8 @@ int main(int argc, char const *argv[]) {
 
 	// Set up a "listening" socket to listen for connections on port passed in
 	int listening_sfd,
-	    control_sfd;
+	    control_sfd,
+	    data_sfd;
 	int backlog = 5; // maximum connections to listen for and backlog
 
 	listening_sfd = get_socket_bind_to_port(NULL, port_str);
@@ -45,6 +46,8 @@ int main(int argc, char const *argv[]) {
 		// Cite: Beej's guide page 24-ish, and pg 28-29
 		addr_size = sizeof their_addr;
 		char * control_message = malloc(sizeof(char) * BUF_SIZE);
+		char command[BUF_SIZE];
+		int command_type;
 
 		// Create control connection ("P")
 		control_sfd = accept(listening_sfd, (struct sockaddr *)&their_addr, &addr_size);
@@ -63,10 +66,21 @@ int main(int argc, char const *argv[]) {
 		}
 		printf("DEBUG STATEMENT: Command received: \"%s\"\n", control_message);
 
-
+		command_type = get_command_type(control_message);
+		if (command_is_valid(command_type)) {
+			printf("Command is valid.\n");
+			send_string_on_socket(control_sfd, "DATAPORT?");
+		}
+		else {
+			// Send error message on control socket
+			send_string_on_socket(control_sfd, "Invalid command");
+		}
 		// send_string_on_socket(control_sfd, "Hello world");
 
+
+		// Free up resources
 		close(control_sfd);
+		if (control_message) free (control_message);
 	}
 
 	close(listening_sfd);

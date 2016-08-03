@@ -40,6 +40,9 @@
 #define MAX_FILENAME_LEN 500
 #define READ_MODE 1
 #define WRITE_MODE 2
+#define LIST_COMMAND 1
+#define GET_COMMAND 2
+#define INVALID_COMMAND -1
 
 // 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
@@ -274,5 +277,21 @@ int receive_string_from_client(int sfd, char * buffer) {
 	return 0;
 }
 
+int get_command_type(char * command) {
+	if (strcmp(command, "-l") == 0) {
+		return LIST_COMMAND;
+	}
+	else if (strcmp(command, "-g") == 0) {
+		return GET_COMMAND;
+	}
+	else return INVALID_COMMAND;
+}
+
+int command_is_valid(int command_type) {
+	if (command_type == LIST_COMMAND || command_type == GET_COMMAND)
+		return 1;
+	else
+		return 0;
+}
 
 #endif
