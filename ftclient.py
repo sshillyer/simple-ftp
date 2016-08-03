@@ -73,8 +73,10 @@ dataSocket.listen(1)
 dataConnection, addr = dataSocket.accept()
 
 # See if we can receive
-response = serverSocket.recv(1024)
+response = dataConnection.recv(1024)
 response = response.decode()
+print("Response: ")
+print(response)
 
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
