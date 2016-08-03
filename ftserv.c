@@ -162,6 +162,15 @@ int main(int argc, char const *argv[]) {
 				printf("File not found or is not readable. Sending error message to %s:%s\n", client_ip_str, data_port_str);
 			}
 
+			while ((read = getline(&line, &len, fp)) != -1) {
+				printf("Retrieved line of length %zu : \n", read);
+				printf("%s", line);
+			}
+
+			fclose(fp);
+			if(line) free(line);
+			// THEN CLEANUP
+
 			// if (is_file_readable(file_name) == 0) {
 			// 	printf("File is readable.\n");
 			// }
