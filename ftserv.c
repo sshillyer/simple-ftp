@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]) {
 	while (1) {
 		// Cite: Beej's guide page 24-ish, and pg 28-29
 		addr_size = sizeof their_addr;
-		char control_message[BUF_SIZE];
+		char * control_message = malloc(sizeof(char) * BUF_SIZE);
 
 		// Create control connection ("P")
 		control_sfd = accept(listening_sfd, (struct sockaddr *)&their_addr, &addr_size);
@@ -54,8 +54,17 @@ int main(int argc, char const *argv[]) {
 			continue;
 		}
 
-		receive_command_from_client(control_sfd, control_message);
-		send_string_on_socket(control_sfd, "Hello world");
+		// Read the command from the 
+		// receive_command_from_client(control_sfd, control_message);
+		if (receive_string_from_client(control_sfd, control_message) == -1) {
+			fprintf(stderr, "Unable to read string from client\n");
+			close(control_sfd);
+			continue;
+		}
+		printf("DEBUG STATEMENT: Command received: \"%s\"\n", control_message);
+
+
+		// send_string_on_socket(control_sfd, "Hello world");
 
 		close(control_sfd);
 	}

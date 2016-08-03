@@ -36,15 +36,33 @@ else:
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname and the port #
 
-# Send command to the server
+# Once connected, send the command and the dataPort we wish to use
+print("Command was: " + command)
+command.rstrip('\n') # prob not necessary
+
 if serverSocket.sendall(command.encode()) != None:
 	print("sendall failed")
 
-response = serverSocket.recv(1024)
-print("Response:")
-print(response.decode())
 
+# commandtest = '-l'
+# commandtest.rstrip('\n')
+# serverSocket.sendall(commandtest.encode())
+
+# Send command to the server
 # command.rstrip('\n') # prob not necessary
+# print("About to send command: " + command)
+# if serverSocket.send(command.encode()) != None:
+# 	print("sendall failed")
+# else:
+# 	print("It worked")
+
+
+
+# # The respone here worked:
+# response = serverSocket.recv(1024)
+# print("Response:")
+# print(response.decode())
+
 
 
 # response = ''

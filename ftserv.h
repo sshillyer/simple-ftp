@@ -254,11 +254,24 @@ void send_string_on_socket(int sfd, char * msg) {
 	safe_transmit_msg_on_socket(sfd, msg, len, WRITE_MODE);
 }
 
-void receive_command_from_client(int sfd, char * buffer) {
-	safe_transmit_msg_on_socket(sfd, buffer, BUF_SIZE, READ_MODE);
-	// DEBUG LINE:
-	printf("receive_command_from_client(%d, buffer) got:\n", sfd);
-	printf("%s", buffer);
+int receive_string_from_client(int sfd, char * buffer) {
+	int bytes_transmitted;
+	if (bytes_transmitted = recv(sfd, buffer, BUF_SIZE, 0) <= 0) {
+		if (bytes_transmitted == 0) {
+			// Connection closed by client
+			printf("client disconnected\n");
+		}
+		else {
+			perror("recv");
+		}
+		close(sfd);
+		return -1;
+	}
+
+	// printf("receive_command_from_client(%d, buffer) got:\n", sfd);
+	// printf("%s", buffer);
+
+	return 0;
 }
 
 
