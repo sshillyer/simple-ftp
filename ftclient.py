@@ -89,7 +89,7 @@ if command == "-l":
 		fileName = originalFN + str(i)
 		updated = True
 	if updated == True:
-		printf("Filename \"" + originalFN + "\" exists. Updating copied file name to " + fileName)
+		print("Filename \"" + originalFN + "\" exists. Updating copied file name to " + fileName)
 	
 	# Read data from connection Q (Data connection) until no more lines
 	while isMoreData:
