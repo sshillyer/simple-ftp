@@ -51,6 +51,10 @@ int main(int argc, char const *argv[]) {
 		// Cite: Beej's guide page 24-ish, and pg 28-29
 		addr_size = sizeof their_addr;
 		char * control_message = malloc(sizeof(char) * BUF_SIZE);
+		int i;
+		for (i = 0; i < BUF_SIZE; i++) {
+			control_message[i] = '\0';
+		}
 		char command[BUF_SIZE];
 		char client_ip_str[INET6_ADDRSTRLEN];
 		int command_type;
