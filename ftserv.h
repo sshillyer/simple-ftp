@@ -40,7 +40,7 @@
 #define MAX_FILENAME_LEN 500
 #define READ_MODE 1
 #define WRITE_MODE 2
-                
+
 // 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
 /*******************************************************************************
@@ -186,9 +186,9 @@ void safe_transmit_msg_on_socket(int fd, char * buffer, int message_length, int 
 	int bytes_remaining = message_length, bytes_transmitted = 0;
 	while ( bytes_remaining > 0 ) {
 		int i = message_length - bytes_remaining;
-		if (mode == 1)
+		if (mode == READ_MODE)
 			bytes_transmitted = read(fd, buffer + i, bytes_remaining);
-		else if (mode == 2)
+		else if (mode == WRITE_MODE)
 			bytes_transmitted = write(fd, buffer, bytes_remaining);
 		bytes_remaining -= bytes_transmitted;
 	}
@@ -200,6 +200,68 @@ void safe_transmit_msg_on_socket(int fd, char * buffer, int message_length, int 
 		exit(EXIT_FAILURE);
 	}
 }
+
+/*******************************************************************************
+*
+* Cite: Beej's Guide, all of the chapters on creating a socket, binding, etc. 
+*******************************************************************************/
+int get_socket_bind_to_port(const char * ip, const char * port) {
+	// Variables used in getaddrinfo() call
+	int status,
+	    sfd; // socket file descriptor
+	struct addrinfo hints;
+	struct addrinfo *res;
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	status = getaddrinfo(ip, port, &hints, &res);
+	if (status != 0) {
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+	}
+	
+	// Make a socket
+	sfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (sfd == -1) {
+		fprintf(stderr, "socket did not return valid socket\n");
+	}
+
+	// Bind the socket to the port passed in to getaddrinfo
+	status = bind(sfd, res->ai_addr, res->ai_addrlen);
+	if (status == -1) {
+		fprintf(stderr, "bind failed to bind socket\n");
+	}
+
+
+	// Free the response from getaddrinfo
+	freeaddrinfo(res);
+
+	// Need socket file descriptor to reference in main()
+	return sfd; 
+}
+
+
+// Cite: Beej page 23
+int listen_and_accept_on_socket(int sfd) {
+	int backlog = 5; // maximum connections to listen for and backlog
+	listen(sfd, backlog);
+
+	struct sockaddr_storage their_addr;
+	socklen_t addr_size;
+	int new_fd;
+
+	addr_size = sizeof their_addr;
+
+	while (1) {
+		new_fd = accept(sfd, (struct sockaddr *)&their_addr, &addr_size);
+	}
+
+	
+
+}
+
 
 
 #endif

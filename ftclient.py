@@ -12,11 +12,9 @@
 #               Pyton Essential Reference - 4th Edition  ("PER")
 ################################################################################
 
-# from socket import *
 import sys
 import socket
 
-# Validate correct number of arguments
 if len(sys.argv) < 5:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
 	quit()
@@ -26,7 +24,6 @@ serverPort = int(str(sys.argv[2]))
 command = str(sys.argv[3])
 fileName = ''
 
-# Parse the filename only if command is to -g (get)
 if command == "-l" and len(sys.argv) == 5:
 	dataPort = int(str(sys.argv[4]))
 elif command == "-g" and len(sys.argv) == 6:
@@ -36,43 +33,26 @@ else:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
 	quit()
 
-
-# DEBUG statements: Echo the variables read in:
-print("serverHost = " + serverHost)
-print("serverPort = " + str(serverPort))
-print("command = " + command)
-if fileName:
-	print("fileName = " + fileName)
-print("dataPort = " + str(dataPort))
-
-
-# TODO: Validate all of the arguments (Be sure to modularize and write functions)
-
-
-
-# END VALIDATION SECTION
-
-# Next, open the socket and connect to the server
-# Cite: PER Pg 451 : a 6 line client that receives time from a server
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname and the port #
 
-
-# Once connected, send the command and the dataPort we wish to use
-print("Command was: " + command)
 command.rstrip('\n') # prob not necessary
 
 if serverSocket.sendall(command.encode()) != None:
 	print("sendall failed")
 
-response = serverSocket.recv(513)
-print("Response:\n")
+response = ''
+print("Response:")
+response = serverSocket.recv(1024)
+print("Response:")
+response.decode()
+print("Response:")
 print(response)
 
-if response == "GET DATAPORT":
-	print("Server wants the data port #")
-	print("Sending: '" + str(dataPort) + "'")
-	serverSocket.sendall(str(dataPort).encode())
+# if response == "GET DATAPORT":
+# 	print("Server wants the data port #")
+# 	print("Sending: '" + str(dataPort) + "'")
+# 	serverSocket.sendall(str(dataPort).encode())
 
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
