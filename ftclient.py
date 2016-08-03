@@ -80,16 +80,18 @@ if command == "-l":
 	isMoreData = True
 	ack = "ACK"
 
+	# Make sure file doesn't exist locally, give it a new name if it does
+	originalFN = fileName
 	updated = False
 	i = 0
-	while (os.path.exists(fileName)):
+	while (os.path.isfile(fileName)):
 		i = i + 1
+		fileName = originalFN + str(i)
 		updated = True
-	
 	if updated == True:
-		printf("Filename \"" + fileName + "\" exists. Updating to " + (str(i) + fileName))
-		fileName = str(i) + fileName
+		printf("Filename \"" + originalFN + "\" exists. Updating copied file name to " + fileName)
 	
+	# Read data from connection Q (Data connection) until no more lines
 	while isMoreData:
 		response = dataConnection.recv(1024)
 		response = response.decode()
