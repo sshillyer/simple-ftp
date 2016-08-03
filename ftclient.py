@@ -94,9 +94,26 @@ if command == "-l":
 	controlSocket.close() # Backup in case ftserv doesn't close connection Q
 	quit()
 
+
+# If we sent the get command, send filename and see if file is found before getting
 elif command == "-g":
 	# Send the filename to server to validate it exists
 	controlSocket.sendall(str(fileName).encode())
+	response = controlSocket.recv(1024)
+	response = response.decode()
+
+	if response == "ACK":
+		while isMoreData:
+			response = dataConnection.recv(1024)
+			response = response.decode()
+			if "FTCLIENT END FILE" in response:
+				print("DEBUG STATEMENT: Server done sending file.")
+				isMoreData = False
+			else:
+				print(response)
+				dataConnection.sendall(ack.encode()) # This is a trick I used to force each row to be sent separately
+	elif response == "NEG":
+		print(serverHost + ":" + serverPort + " says FILE NOT FOUND")
 
 	# Clean up
 	dataConnection.close() # ftclient closes connection P

@@ -157,30 +157,12 @@ int main(int argc, char const *argv[]) {
 
 			printf("File \"%s\" requested on port %d.\n", file_name, data_port);
 			
-			// Cite: stackoverflow.com/questions/3501338
-			char * line = NULL;
-			size_t len = 0;
-			ssize_t read;
-			FILE *fp = fopen(file_name, "r");
-			if (fp == NULL) {
+			char * end_of_file_msg = "FTCLIENT END FILE";
+			if (send_file_strings(data_sfd, file_name, control_sfd) == -1) {
 				printf("File not found or is not readable. Sending error message to %s:%s\n", client_ip_str, data_port_str);
 			}
-
-			while ((read = getline(&line, &len, fp)) != -1) {
-				printf("Retrieved line of length %zu : \n", read);
-				printf("%s", line);
-			}
-
-			fclose(fp);
-			if(line) free(line);
 			// THEN CLEANUP
 
-			// if (is_file_readable(file_name) == 0) {
-			// 	printf("File is readable.\n");
-			// }
-			// else {
-			// 	printf("File is not readable.\n");
-			// }
 		}
 
 

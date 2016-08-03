@@ -15,7 +15,7 @@
 
 #ifndef SSHILLYER_FTSERV_H
 #define SSHILLYER_FTSERV_H
-
+#define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -33,6 +33,7 @@
 #include <sys/unistd.h>
 
 // Constants
+
 #define MIN_PORT_NUMBER 1
 #define MAX_PORT_NUMBER 65535
 #define BUF_HANDLE 12
@@ -358,6 +359,34 @@ int send_directory_contents(int sfd) {
 	return 0; // success
 }
 
+int send_file_strings(int sfd, const char * file_name, int control_sfd) {
+
+	char ackdump[10];
+
+	// Cite: Inspriation from stackoverflow.com/questions/3501338
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+
+	FILE *fp = fopen(file_name, "r");
+	if (fp == NULL) {
+		send_string_on_socket(control_sfd, "NEG");
+		return -1;
+	}
+
+	send_string_on_socket(control_sfd, "ACK");
+	
+	while ((read = getline(&line, &len, fp)) != -1) {
+		send_string_on_socket(sfd, line);
+		receive_string_from_client(sfd, ackdump); // Trick to chunk the write() calls
+	}
+
+	fclose(fp);
+	if(line) free(line);
+
+	return 0;
+}
+
 
 // Cite: This function borrowed from Page 28 of Beej guide
 void *get_in_addr(struct sockaddr *sa) {
@@ -368,8 +397,5 @@ void *get_in_addr(struct sockaddr *sa) {
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int is_file_readable(const char * filename) {
-	return access(filename, R_OK);
-}
 
 #endif
