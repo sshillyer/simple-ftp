@@ -108,7 +108,7 @@ elif command == "-g":
 		while isMoreData:
 			response = dataConnection.recv(1024)
 			response = response.decode()
-			if "FTCLIENT END FILE" in response:
+			if "FTSERVBYE" in response:
 				print("DEBUG STATEMENT: Server done sending file.")
 				isMoreData = False
 			else:

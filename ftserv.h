@@ -381,6 +381,8 @@ int send_file_strings(int sfd, const char * file_name, int control_sfd) {
 		receive_string_from_client(sfd, ackdump); // Trick to chunk the write() calls
 	}
 
+	send_string_on_socket(sfd, "FTSERVBYE");
+
 	fclose(fp);
 	if(line) free(line);
 
