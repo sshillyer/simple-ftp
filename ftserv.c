@@ -157,6 +157,10 @@ int main(int argc, char const *argv[]) {
 
 			printf("File \"%s\" requested on port %d.\n", file_name, data_port);
 			
+			// Cite: stackoverflow.com/questions/3501338
+			char * line = NULL;
+			size_t len = 0;
+			ssize_t read;
 			FILE *fp = fopen(file_name, "r");
 			if (fp == NULL) {
 				printf("File not found or is not readable. Sending error message to %s:%s\n", client_ip_str, data_port_str);
