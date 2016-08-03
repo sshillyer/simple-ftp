@@ -65,6 +65,17 @@ elif response == "Invalid command":
 	quit()
 
 
+# Command was valid - listen for the data connection from server
+
+dataSocket = socket(AF_INET, SOCK_STREAM)
+dataSocket.bind(('', dataPort))
+dataSocket.listen(1)
+dataConnection, addr = dataSocket.accept()
+
+# See if we can receive
+response = serverSocket.recv(1024)
+response = response.decode()
+
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
 # If those are okay, we ack the response and start listening on dataPort

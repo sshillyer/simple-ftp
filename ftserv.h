@@ -43,7 +43,7 @@
 #define LIST_COMMAND 1
 #define GET_COMMAND 2
 #define INVALID_COMMAND -1
-
+#define PORT_MAX_LEN 6
 // 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
 /*******************************************************************************
@@ -229,12 +229,46 @@ int get_socket_bind_to_port(const char * ip, const char * port) {
 	sfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sfd == -1) {
 		fprintf(stderr, "socket did not return valid socket\n");
+		return sfd;
 	}
 
 	// Bind the socket to the port passed in to getaddrinfo
 	status = bind(sfd, res->ai_addr, res->ai_addrlen);
 	if (status == -1) {
 		fprintf(stderr, "bind failed to bind socket\n");
+		exit(EXIT_FAILURE);
+	}
+
+	// Free the response from getaddrinfo
+	freeaddrinfo(res);
+
+	// Need socket file descriptor to reference in main()
+	return sfd; 
+}
+
+
+int get_socket_no_bind_to_port(const char * ip, const char * port) {
+	// Variables used in getaddrinfo() call
+	int status,
+	    sfd; // socket file descriptor
+	struct addrinfo hints;
+	struct addrinfo *res;
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	status = getaddrinfo(ip, port, &hints, &res);
+	if (status != 0) {
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+	}
+	
+	// Make a socket
+	sfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (sfd == -1) {
+		fprintf(stderr, "socket did not return valid socket\n");
+		return sfd;
 	}
 
 	// Free the response from getaddrinfo
@@ -271,9 +305,6 @@ int receive_string_from_client(int sfd, char * buffer) {
 		return -1;
 	}
 
-	// printf("receive_command_from_client(%d, buffer) got:\n", sfd);
-	// printf("%s", buffer);
-
 	return 0;
 }
 
@@ -295,5 +326,16 @@ int command_is_valid(int command_type) {
 }
 
 // int send_directory_contents
+
+
+// Cite: This function borrowed from Page 28 of Beej guide
+void *get_in_addr(struct sockaddr *sa) {
+	if (sa->sa_family == AF_INET) {
+		return &(((struct sockaddr_in*)sa)->sin_addr);
+	}
+
+	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
 
 #endif

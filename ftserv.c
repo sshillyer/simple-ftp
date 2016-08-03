@@ -26,6 +26,7 @@
 int main(int argc, char const *argv[]) {
 	// Parse command line arguments, validate port number is good
 	const char * port_str = argv[1];
+	char data_port_str[PORT_MAX_LEN];
 	check_argument_count(argc, 2, "Usage: ftserv port\n");
 	int control_port = convert_string_to_int(argv[1]), // Connection 'P'
 	    data_port = -1; // For connection 'Q'
@@ -43,11 +44,15 @@ int main(int argc, char const *argv[]) {
 	struct sockaddr_storage their_addr;
 	socklen_t addr_size;
 
+	printf("Server open on %d\n", control_port);
+
+	// Main accept() loop
 	while (1) {
 		// Cite: Beej's guide page 24-ish, and pg 28-29
 		addr_size = sizeof their_addr;
 		char * control_message = malloc(sizeof(char) * BUF_SIZE);
 		char command[BUF_SIZE];
+		char client_ip_str[INET6_ADDRSTRLEN];
 		int command_type;
 
 		// Create control connection ("P")
@@ -57,6 +62,14 @@ int main(int argc, char const *argv[]) {
 			perror("accept");
 			continue;
 		}
+		
+		// First we need ftclient's ip. Cite: Beej Page 29 example code
+		inet_ntop(their_addr.ss_family, 
+			get_in_addr( (struct sockaddr *)&their_addr), 
+			client_ip_str, sizeof client_ip_str);
+
+		// Print IP of the connecting server before proceeding
+		printf("Connection from %s.\n", client_ip_str);
 
 		// Read command from ftclient
 		if (receive_string_from_client(control_sfd, control_message) == -1) {
@@ -78,22 +91,32 @@ int main(int argc, char const *argv[]) {
 				// close(control_sfd); // ftclient closes the connection P
 				continue;
 			}
-			printf("DEBUG STATEMENT:Client sent dataport # as string: %s\n", control_message);
+
 			data_port = convert_string_to_int(control_message);
 			validate_port(control_port, errno);
+			strncpy(data_port_str, control_message, sizeof data_port_str);
+// DEBUG STATEMENTS			
+			printf("DEBUG STATEMENT:Client sent dataport # as string: %s\n", control_message);
 			printf("DEBUG STATEMENT: dataport converted to int: %d\n", data_port);
+			printf("DEBUG STATEMENT: Server stored data_port_str as: %s\n", data_port_str);
+// END DEBUG STATEMENTS
 		}
 		else {
-			// Send error message on control socket
-			send_string_on_socket(control_sfd, "Invalid command");
+			// Command not valid; send error message on control connection
+			// send_string_on_socket(control_sfd, "Invalid command");
 			// close(control_sfd); // ftclient closes the connection P
 			continue;
 		}
 
-		// Command was valid. 
+		// Command was valid - open the data_connection. 
+		printf("DEBUG STATEMENT: attempting to get_socket_bind_to_port(%s, %s)\n", client_ip_str, data_port_str);
+		data_sfd = get_socket_no_bind_to_port(client_ip_str, data_port_str);
+		printf("DEBUG STATEMENT: data_sfd = %d\n", data_sfd);
+
+		send_string_on_socket(data_sfd, "DataConnection string");
 
 		if (command_type == LIST_COMMAND) {
-
+			printf("List directory requested on port %d.\n", data_port);
 		}
 
 
