@@ -80,7 +80,7 @@ if command == "-l":
 	while isMoreData:
 		response = dataConnection.recv(1024)
 		response = response.decode()
-		if response == "FTCLIENT END DIR LIST":
+		if response == "FTCLIENT END DIR LIST\0":
 			print("Server done sending directory listing.")
 			isMoreData = False
 			dataConnection.close()
