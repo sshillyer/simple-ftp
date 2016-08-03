@@ -101,8 +101,9 @@ elif command == "-g":
 	controlSocket.sendall(str(fileName).encode())
 	response = controlSocket.recv(1024)
 	response = response.decode()
-
+	
 	if response == "ACK":
+		isMoreData = True
 		while isMoreData:
 			response = dataConnection.recv(1024)
 			response = response.decode()
