@@ -72,11 +72,19 @@ dataSocket.bind(('', dataPort))
 dataSocket.listen(1)
 dataConnection, addr = dataSocket.accept()
 
-# See if we can receive
-response = dataConnection.recv(1024)
-response = response.decode()
-print("Response: ")
-print(response)
+# If we sent the list command, listen for and print strings until the server sends
+# the string "FTCLIENT END DIR LIST"
+if command == "-l":
+	print("Receiving directory structure from " + serverHost + ":" + dataPort)
+	isMoreData = True
+	while isMoreData:
+		response = dataConnection.recv(1024)
+		response = response.decode()
+		if response == "FTCLIENT END DIR LIST":
+			isMoreData = False
+		else:
+			print(response)
+
 
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
