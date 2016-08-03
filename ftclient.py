@@ -45,7 +45,7 @@ if controlSocket.sendall(command.encode()) != None:
 	print("sendall failed")
 
 # The respone here worked:
-response = controlSocket.recv(1024)
+response = controlSocket.recv(65535)
 response = response.decode()
 
 print("Response:")
@@ -82,7 +82,7 @@ if command == "-l":
 	
 	# Read data from connection Q (Data connection) until no more lines
 	while isMoreData:
-		response = dataConnection.recv(1024)
+		response = dataConnection.recv(65535)
 		response = response.decode()
 		if "FTSERVBYE" in response:
 			print("DEBUG STATEMENT: Server done sending directory listing.")
@@ -101,7 +101,7 @@ if command == "-l":
 elif command == "-g":
 	# Send the filename to server to validate it exists
 	controlSocket.sendall(str(fileName).encode())
-	response = controlSocket.recv(1024)
+	response = controlSocket.recv(65535)
 	response = response.decode()
 	ack = "ACK"
 
@@ -111,21 +111,27 @@ elif command == "-g":
 	i = 0
 	while (os.path.isfile(fileName)):
 		i = i + 1
-		fileName = originalFN + str(i)
+		fileName =  "copy_" + str(i) + "_" + originalFN
 		updated = True
 	if updated == True:
 		print("Filename \"" + originalFN + "\" exists. Updating copied file name to " + fileName)
 
+	# If ack was received, open the new file for writing and put each string in the file.
 	if response == ack:
+		# Open file for writing (cite: www.python-course.eu/python3_file_management.php)
+		fh = open(fileName, "w")
+
 		isMoreData = True
 		while isMoreData:
-			response = dataConnection.recv(1024)
+			response = dataConnection.recv(65535)
 			response = response.decode()
 			if "FTSERVBYE" in response:
+				fh.close()
 				print("File transfer complete.")
 				isMoreData = False
 			else:
-				print(response)
+				# print(response)
+				fh.write(response)
 				dataConnection.sendall(ack.encode()) # This is a trick I used to force each row to be sent separately
 	elif response == "NEG":
 		print(serverHost + ":" + str(serverPort) + " says FILE NOT FOUND")
