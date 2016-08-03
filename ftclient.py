@@ -89,7 +89,7 @@ if command == "-l":
 			quit()
 		else:
 			print("\n" + response)
-			dataConnection.sendall(ack.encode)
+			dataConnection.sendall(ack.encode())
 
 
 # Our protocol will wait for the control connection on serverSocket to send a
