@@ -33,18 +33,18 @@ else:
 	print("Usage: python3 ftclient serverHost serverPort -[l|g] <filename> dataPort")
 	quit()
 
-serverSocket = socket(AF_INET, SOCK_STREAM)
-serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname and the port #
+controlSocket = socket(AF_INET, SOCK_STREAM)
+controlSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname and the port #
 
 # Once connected, send the command and the dataPort we wish to use
 print("Command was: " + command)
 command.rstrip('\n') # prob not necessary
 
-if serverSocket.sendall(command.encode()) != None:
+if controlSocket.sendall(command.encode()) != None:
 	print("sendall failed")
 
 # The respone here worked:
-response = serverSocket.recv(1024)
+response = controlSocket.recv(1024)
 response = response.decode()
 
 print("Response:")
@@ -54,14 +54,14 @@ print(response)
 if response == "DATAPORT?":
 	print("Server wants the data port #")
 	print("Sending: '" + str(dataPort) + "'")
-	serverSocket.sendall(str(dataPort).encode())
+	controlSocket.sendall(str(dataPort).encode())
 elif response == "DATAPORT ERR":
 	print("Error sending dataport to server; unable to process request.")
-	serverSocket.close()
+	controlSocket.close()
 	quit()
 elif response == "Invalid command":
 	print("Invalid command sent to server; unable to process request.")
-	serverSocket.close()
+	controlSocket.close()
 	quit()
 
 
@@ -85,14 +85,19 @@ if command == "-l":
 		if "FTSERVBYE" in response:
 			print("DEBUG STATEMENT: Server done sending directory listing.")
 			isMoreData = False
-			dataConnection.close()
-			quit()
 		else:
-			print("\n" + response)
-			dataConnection.sendall(ack.encode())
+			print(response)
+			dataConnection.sendall(ack.encode()) # This is a trick I used to force each row to be sent separately
+	dataConnection.close() # ftclient closes connection P
+	dataSocket.close()
+	controlSocket.close() # Backup in case ftserv doesn't close connection Q
+	quit()
 
+elfif command == "-g":
+	# Send the filename to server to validate it exists
+	controlSocket.sendall(str(fileName).encode())
 
-# Our protocol will wait for the control connection on serverSocket to send a
+# Our protocol will wait for the control connection on controlSocket to send a
 # response that states the command is good and the filename (if -g command) is good
 # If those are okay, we ack the response and start listening on dataPort
 # The server will wait for our "ack" and then initiate a new data connection on dataPort
@@ -101,40 +106,3 @@ if command == "-l":
 # in a file called fileName (which was provided on the command line). If filename already
 # exists, we can a) abort the entire thing or b) prompt user for a new filename? (Maybe extra credit here?)
 
-
-
-# dataSocket = socket(AFI_INET, SOCK_STREAM)
-# dataSocket.bind(('', dataPort))
-# dataSocket.listen()
-
-# Main server loop: listen for incoming connection
-# while 1:
-# 	connectionSocket, addr = serverSocket.accept()
-# 	again = True
-
-# 	# Once connected, exchange messages until quit message received
-# 	while again:
-# 		userInput = ''
-# 		message = ''  # TODO: try deleting this line, prob superflous
-# 		message = connectionSocket.recv(513)
-# 		message = message.decode()
-
-# 		if message == "\quit":
-# 			again = False
-# 			print("Peer has requested disconnect.\nServer is listening for more connections.")
-# 			break
-# 		else:
-# 			print(message)
-# 			userInput = input(serverHandle + "> ")
-# 			userInput.rstrip('\n')
-# 			if userInput != "\quit":
-# 				response = serverHandle + "> " + userInput
-# 			else:
-# 				response = userInput
-# 			connectionSocket.sendall(response.encode())
-# 			if userInput == '\quit':
-# 				print("Sent \quit command, disconnected from client.\nServer is listening for more connections.")
-# 				break
-
-	# Once done exchanging messages, close the socket
-	# connectionSocket.close()

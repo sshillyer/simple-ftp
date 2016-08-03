@@ -51,9 +51,11 @@ int main(int argc, char const *argv[]) {
 		// Cite: Beej's guide page 24-ish, and pg 28-29
 		addr_size = sizeof their_addr;
 		char * control_message = malloc(sizeof(char) * BUF_SIZE);
+		char * file_name = malloc(sizeof(char) * BUF_SIZE);
 		int i;
 		for (i = 0; i < BUF_SIZE; i++) {
 			control_message[i] = '\0';
+			file_name[i] = '\0';
 		}
 		char command[BUF_SIZE];
 		char client_ip_str[INET6_ADDRSTRLEN];
@@ -134,6 +136,7 @@ int main(int argc, char const *argv[]) {
 
 		printf("DEBUG STATEMENT: data_sfd = %d\n", data_sfd);
 
+
 		// Send the directory contents to ftclient on data connection Q
 		if (command_type == LIST_COMMAND) {
 			printf("List directory requested on port %d.\n", data_port);
@@ -142,8 +145,23 @@ int main(int argc, char const *argv[]) {
 		}
 
 
+		// Send the filename (if it exists) to client
+		else if (command_type == GET_COMMAND) {
+			if (receive_string_from_client(control_sfd, file_name) == -1) {
+				fprintf(stderr, "DEBUG STATEMENT: Unable to read filename from client\n");
+				close(control_sfd);
+				clear_buff(file_name);
+				if (file_name) free (file_name);
+				continue;
+			}
+
+			printf("File \"%s\" requested on port %d.\n", file_name, data_port);
+		}
+
+
 		// Free up resources
-		close(control_sfd); // TODO: Move this to the client 8. ftclient closes connection P
+		close(data_sfd);
+		close(control_sfd); // A failsafe in case ftclient doesn't close connection P
 		if (control_message) free (control_message);
 	} // while loop. 9. ftserver repeats from 2 until terminated.
 
