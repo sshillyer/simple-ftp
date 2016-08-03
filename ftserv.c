@@ -60,6 +60,7 @@ int main(int argc, char const *argv[]) {
 		if (control_sfd == -1) {
 			// Error out if accept fails and loop again listening for more
 			perror("accept");
+			clear_buff(control_message);
 			continue;
 		}
 		
@@ -75,6 +76,7 @@ int main(int argc, char const *argv[]) {
 		if (receive_string_from_client(control_sfd, control_message) == -1) {
 			fprintf(stderr, "DEBUG STATEMENT: Unable to read command from client\n");
 			close(control_sfd);
+			clear_buff(control_message);
 			continue;
 		}
 		printf("DEBUG STATEMENT: Command received: \"%s\"\n", control_message);
@@ -89,6 +91,7 @@ int main(int argc, char const *argv[]) {
 				fprintf(stderr, "Unable to read dataport from client\n");
 				send_string_on_socket(control_sfd, "DATAPORT ERR");
 				// close(control_sfd); // ftclient closes the connection P
+				clear_buff(control_message);
 				continue;
 			}
 
@@ -105,6 +108,7 @@ int main(int argc, char const *argv[]) {
 			// Command not valid; send error message on control connection
 			send_string_on_socket(control_sfd, "Invalid command");
 			// close(control_sfd); // ftclient closes the connection P
+			clear_buff(control_message);
 			continue;
 		}
 
@@ -115,6 +119,7 @@ int main(int argc, char const *argv[]) {
 		if (data_sfd == -1 ) {
 			printf("DEBUG STATEMENT: Error connecting on that port.\n");
 			close(control_sfd);
+			clear_buff(control_message);
 			continue;
 		}
 
