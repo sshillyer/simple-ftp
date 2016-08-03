@@ -164,11 +164,15 @@ int main(int argc, char const *argv[]) {
 		int commandIsList = 0;
 		int commandIsGet = 0;
 
+		char * msg_req_dataport = "GET DATAPORT\0";
 		if (strcmp(client_message, "-l") == 0) {
 			commandIsList = 1;
+			printf("Supposed to send: %s\n", msg_req_dataport);
+			safe_transmit_msg_on_socket(control_sfd, msg_req_dataport, sizeof msg_req_dataport, WRITE_MODE);
 		}
 		else if (strcmp(client_message, "-g") == 0) {
 			commandIsGet = 1;
+			safe_transmit_msg_on_socket(control_sfd, msg_req_dataport, sizeof msg_req_dataport, WRITE_MODE);
 		}
 		// else if command is not valid, send error message on control_sfd to client, close open socket P, continue while()
 		else {
@@ -176,7 +180,34 @@ int main(int argc, char const *argv[]) {
 			safe_transmit_msg_on_socket(control_sfd, invalid_command_msg, sizeof invalid_command_msg, WRITE_MODE);
 		}
 
+		client_message = malloc(sizeof(char) * BUF_MSG);
+		for (z = 0; z < BUF_MSG; z++) {
+			// We have to zero out the mssage to be sure it gets null terminated
+			client_message[z] = '\0';
+		}
+
+		// Listen for the dataPort from the control connection (control_sfd)
+		if (bytes_transmitted = recv(control_sfd, client_message, sizeof client_message, 0) <= 0) {
+			if (bytes_transmitted == 0) {
+				// Connection closed by client
+				printf("client disconnected\n");
+			}
+			else {
+				perror("recv - THIS IS BROKEN?");
+			}
+			close(control_sfd);
+			break;
+		}
+		bytes_transmitted = 0;
+
+		int dataPort = convert_string_to_int(client_message);
+		printf("dataPort request received: %d", dataPort);
+
+
+
 		// get/open a second connection, assign it to data_sfd, connecting back to clients ip and using <dataport> (which it sent over)
+
+
 
 
 		// if client sent -l command, send dir() listing to client

@@ -62,12 +62,17 @@ serverSocket.connect((serverHost, serverPort))  # accepts a duple, the hostname 
 print("Command was: " + command)
 command.rstrip('\n') # prob not necessary
 
-if serverSocket.sendall(command.encode()) == None:
-	print("It worked?")
+if serverSocket.sendall(command.encode()) != None:
+	print("sendall failed")
 
+response = serverSocket.recv(513)
+print("Response:\n")
+print(response)
 
-# serverSocket.write(command)
-# serverSocket.send("-l".encode())
+if response == "GET DATAPORT":
+	print("Server wants the data port #")
+	print("Sending: '" + str(dataPort) + "'")
+	serverSocket.sendall(str(dataPort).encode())
 
 # Our protocol will wait for the control connection on serverSocket to send a
 # response that states the command is good and the filename (if -g command) is good
