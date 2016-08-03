@@ -77,6 +77,9 @@ dataConnection, addr = dataSocket.accept()
 if command == "-l":
 	print("Receiving directory structure from " + serverHost + ":" + str(dataPort))
 	isMoreData = True
+	ack = "ACK"
+	ack.encode()
+	
 	while isMoreData:
 		response = dataConnection.recv(1024)
 		response = response.decode()
@@ -87,7 +90,7 @@ if command == "-l":
 			quit()
 		else:
 			print("\n" + response)
-			dataConnection.sendall("ACK")
+			dataConnection.sendall(ack)
 
 
 # Our protocol will wait for the control connection on serverSocket to send a
