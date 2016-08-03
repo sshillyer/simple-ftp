@@ -75,7 +75,7 @@ dataConnection, addr = dataSocket.accept()
 # If we sent the list command, listen for and print strings until the server sends
 # the string "FTCLIENT END DIR LIST"
 if command == "-l":
-	print("Receiving directory structure from " + serverHost + ":" + dataPort)
+	print("Receiving directory structure from " + serverHost + ":" + str(dataPort))
 	isMoreData = True
 	while isMoreData:
 		response = dataConnection.recv(1024)
