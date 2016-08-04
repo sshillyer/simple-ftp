@@ -103,8 +103,6 @@ int main(int argc, char const *argv[]) {
 			continue;
 		}
 
-		// printf("DEBUG STATEMENT: Command received: \"%s\"\n", control_message);
-
 		// Set the command_type integer depending on what was sent from client
 		command_type = get_command_type(control_message);
 
@@ -131,12 +129,6 @@ int main(int argc, char const *argv[]) {
 
 			// Copy the message to another buffer for safekeeping and re-use later
 			strncpy(data_port_str, control_message, sizeof data_port_str);
-
-			// DEBUG STATEMENTS
-			// printf("DEBUG STATEMENT:Client sent dataport # as string: %s\n", control_message);
-			// printf("DEBUG STATEMENT: dataport converted to int: %d\n", data_port);
-			// printf("DEBUG STATEMENT: Server stored data_port_str as: %s\n", data_port_str);
-			// END DEBUG STATEMENTS
 		}
 
 		// else command is not valid, send error message on control connection
@@ -148,9 +140,6 @@ int main(int argc, char const *argv[]) {
 			continue;
 		}
 
-
-		// printf("DEBUG STATEMENT: attempting to get_socket_connect_on_port(%s, %s)\n", client_ip_str, data_port_str);
-		
 		// If we reached this far, then command valid and we got a valid dataport to communicate on.
 		
 		// Open a new socket to send data back-and-forth
@@ -162,8 +151,6 @@ int main(int argc, char const *argv[]) {
 			if (control_message) free (control_message);
 			continue;
 		}
-
-		// printf("DEBUG STATEMENT: data_sfd = %d\n", data_sfd);
 
 
 		// IF sent '-l' command, Send the directory contents to ftclient on data connection Q
@@ -192,6 +179,9 @@ int main(int argc, char const *argv[]) {
 			if (send_file_strings(data_sfd, file_name, control_sfd) == -1) {
 				printf("File not found or is not readable. Sending error message to %s:%s\n", client_ip_str, data_port_str);
 				// Cleanup occurs in the final section of while loop just below.
+			}
+			else {
+				printf("Sending \"%s\" to %s:%s\n", file_name, client_ip_str, data_port_str);
 			}
 		}
 
