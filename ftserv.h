@@ -1,8 +1,8 @@
 /*******************************************************************************
-* File:         ftserv.h
+* File:         ftserv.c
 * Author:       Shawn S Hillyer
-* Date:         July 11, 2016
-* Course:       OSU CSS 372: Project 1
+* Date:         July 28, 2016
+* Course:       OSU CSS 372: Project 2
 *
 * Description:  Include headers, constants, & common functions for file transfer
 *               server
@@ -10,12 +10,17 @@
 * Usage:        #include <"ftserv.h">
 *               
 * Cite:         Overall flow of a socket-based client/server pair of programs: 
-                beej.us/guide/bgipc/output/html/multipage/unixsock.html  
+*               beej.us/guide/bgipc/output/html/multipage/unixsock.html  
+*               Other sources cited in specific places in ftserv.c & ftserv.h
+*
+* Note:         Portions of this program were re-used from assignment 4 that I
+*               completed in CS 344 (Specifically, some header file functions)
 *******************************************************************************/
 
 #ifndef SSHILLYER_FTSERV_H
 #define SSHILLYER_FTSERV_H
 #define _GNU_SOURCE
+
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -23,6 +28,7 @@
 #include <limits.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,7 +52,6 @@
 #define GET_COMMAND 2
 #define INVALID_COMMAND -1
 #define PORT_MAX_LEN 6
-// 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
 /*******************************************************************************
 * void check_argument_count(int arg_c, int req, const char * message)
@@ -60,18 +65,6 @@ void check_argument_count(int arg_c, int req, const char * message) {
 		fprintf(stderr, "%s", message);
 		exit(EXIT_FAILURE);
 	}
-}
-
-
-/*******************************************************************************
-* void perror_exit(char * message, int exit_value)
-* prints message using perror() and calls exit with exit_value
-* message: char * pointing to null terminated c-string
-* exit_value: int representing the exit value to pass to exit
-*******************************************************************************/
-void perror_exit(char * message, int exit_value) {
-	perror(message);
-	exit(exit_value);
 }
 
 
@@ -103,91 +96,20 @@ void validate_port(int port, int err) {
 		|| (errno != 0 && port == 0) 
 		|| (port > MAX_PORT_NUMBER || port < MIN_PORT_NUMBER)) 
 	{
-		// perror_exit("strtol", EXIT_FAILURE);
+
 		fprintf(stderr, "strtol() cannot convert port, invalid format or out of range\n");
-		// fprintf(stderr, "%s", message);
 		exit(EXIT_FAILURE);
 	}
-}
-
-/*******************************************************************************
-* void strip_newline_from_string(char * string)
-* string: A null-terminated c-string
-* Strips newline, if one exists, from string & replace with null terminator
-*******************************************************************************/
-void strip_newline_from_string(char * string) {
-	/* strcspn returns the length of all characters in a string that are not in
-	the list of characters in the second argument. So this gives us the end
-	and we place a null at that location in the string. */
-	string[strcspn(string, "\r\n")] = 0; // replace LF, CR, CRLF< LFCR with null
-}
-
-
-/*******************************************************************************
-* build_payload()
-* 
-*******************************************************************************/
-char * build_payload(const char * handle, char * message) {
-	int handle_len = strlen(handle);
-	int message_len = strlen(message);
-	char * payload = malloc(sizeof(char) * (handle_len + message_len) );
-	memset(&payload[0], 0, sizeof(payload));
-	int i, j;
-	for (i = 0; i < handle_len; i++) {
-		payload[i] = handle[i];
-	}
-	payload[i++] = '>';
-	payload[i++] = ' ';
-
-	for (j = 0; j < message_len; j++ ) {
-		payload[i++] = message[j];
-	}
-	payload[i] = '\0';
-
-	return payload;
-}
-
-/*******************************************************************************
-* char * read_string_from_user(int max_len) {
-* 
-*******************************************************************************/
-char * read_string_from_user(int max_len) {
-	char * string; 
-	string = malloc(sizeof(char) * max_len + 2); // extra space for \0 and \n
-	memset(&string[0], 0, sizeof(string));
-
-	// read input, trim off the \n replacing with a null
-	fgets(string, max_len, stdin);
-	string[strlen(string)-1] = '\0';
-// >> DELETE THIS TRASH
-	// printf("DEBUG: strlen(string) is: %u\n", strlen(string));
-	// Flush the rest of the buffer?? 
-	//( Not working as intended, user has to press enter twice after every input)
-	// while(fgetc(stdin) != '\n');
-// << END TRASH DELETE HERE
-	return string;
-}
-
-/*******************************************************************************
-* char * prompt_user_for_handle()
-* 
-*******************************************************************************/
-char * prompt_user_for_handle() {
-	char * handle;
-	printf("Type in a handle, %d characters or less (extra truncated).\n", BUF_HANDLE - 2);
-	printf("Press [enter] when done. (Excess characters in stdin buffer are sent as first message (BUG)\n");
-	printf("Your handle?> ");
-	handle = read_string_from_user(BUF_HANDLE);
-	return handle;
 }
 
 
 /*******************************************************************************
 * void safe_transmit_msg_on_socket(int message_length, int fd, char * buffer, int mode) {
-* 
+* Safely sends a string on the socket by looping until all bytes are sent.
+* Has a read and a write mode that can be set using the constants defined in this 
+* header (READ_MDOE, WRITE_MODE)
 *******************************************************************************/
 void safe_transmit_msg_on_socket(int fd, char * buffer, int message_length, int mode) {
-	// mode == 1 : read | mode == 2 : write
 	int bytes_remaining = message_length, bytes_transmitted = 0;
 	while ( bytes_remaining > 0 ) {
 		int i = message_length - bytes_remaining;
@@ -206,9 +128,11 @@ void safe_transmit_msg_on_socket(int fd, char * buffer, int message_length, int 
 	}
 }
 
+
 /*******************************************************************************
-*
+* get_socket_bind_to_port(const char * ip, const char * port) 
 * Cite: Beej's Guide, all of the chapters on creating a socket, binding, etc. 
+* Uses the ip and port number to get addr info, a socket, and binds it to port
 *******************************************************************************/
 int get_socket_bind_to_port(const char * ip, const char * port) {
 	// Variables used in getaddrinfo() call
@@ -244,11 +168,16 @@ int get_socket_bind_to_port(const char * ip, const char * port) {
 	// Free the response from getaddrinfo
 	freeaddrinfo(res);
 
-	// Need socket file descriptor to reference in main()
+	// Need socket file descriptor to reference in calling code
 	return sfd; 
 }
 
 
+/*******************************************************************************
+* get_socket_connect_on_port(const char * ip, const char * port)
+* Cite: Beej's Guide, all of the chapters on creating a socket, binding, etc. 
+* Gets addr info and a socket, then connects to the ip:port combo passed in
+*******************************************************************************/
 int get_socket_connect_on_port(const char * ip, const char * port) {
 	// Variables used in getaddrinfo() call
 	int status,
@@ -273,6 +202,7 @@ int get_socket_connect_on_port(const char * ip, const char * port) {
 		return sfd;
 	}
 
+	// Connect to the sfd
 	status = connect(sfd, res->ai_addr, res->ai_addrlen);
 	if (status == -1) {
 		perror("connect");
@@ -286,6 +216,11 @@ int get_socket_connect_on_port(const char * ip, const char * port) {
 	return sfd; 
 }
 
+
+/*******************************************************************************
+* void clear_buff(char * buff) 
+* Clears a buffer by placing null terminator in every element
+*******************************************************************************/
 void clear_buff(char * buff) {
 	int len = strlen(buff);
 	int i;
@@ -294,11 +229,21 @@ void clear_buff(char * buff) {
 	}
 }
 
+
+/*******************************************************************************
+* void send_string_on_socket(int sfd, char * msg) 
+* Sends msg to the socket identified by sfd
+*******************************************************************************/
 void send_string_on_socket(int sfd, char * msg) {
 	int len = strlen(msg);
 	safe_transmit_msg_on_socket(sfd, msg, len, WRITE_MODE);
 }
 
+
+/*******************************************************************************
+* int receive_string_from_client(int sfd, char * buffer)
+* Reads a string on sfd and stores it in buffer. Returns -1 on fail, 0 success
+*******************************************************************************/
 int receive_string_from_client(int sfd, char * buffer) {
 	int bytes_transmitted;
 	if (bytes_transmitted = recv(sfd, buffer, BUF_SIZE, 0) <= 0) {
@@ -316,6 +261,11 @@ int receive_string_from_client(int sfd, char * buffer) {
 	return 0;
 }
 
+
+/*******************************************************************************
+* int get_command_type(char * command)
+* Parses a command and returns an integer representing the command type
+*******************************************************************************/
 int get_command_type(char * command) {
 	if (strcmp(command, "-l") == 0) {
 		return LIST_COMMAND;
@@ -326,6 +276,12 @@ int get_command_type(char * command) {
 	else return INVALID_COMMAND;
 }
 
+
+/*******************************************************************************
+* int command_is_valid(int command_type) 
+* Returns true (1) if the integer passed in represents a valid command type, 0
+* if not.
+*******************************************************************************/
 int command_is_valid(int command_type) {
 	if (command_type == LIST_COMMAND || command_type == GET_COMMAND)
 		return 1;
@@ -333,6 +289,12 @@ int command_is_valid(int command_type) {
 		return 0;
 }
 
+
+/*******************************************************************************
+* int send_directory_contents(int sfd)
+* Executes all steps required to send the results of the 'ls' command to client
+* identified by sfd.
+*******************************************************************************/
 int send_directory_contents(int sfd) {
 	char * end_of_dir_msg = "FTCLIENT END DIR LIST";
 	char ackdump[10];
@@ -341,24 +303,36 @@ int send_directory_contents(int sfd) {
 	DIR *dp;
 	struct dirent *ep;
 
+	// Open the pwd
 	dp = opendir ("./");
 	if (dp != NULL) {
+		// Send each item from the directory to the sfd passed in
 		while (ep = readdir (dp)) {
 			send_string_on_socket(sfd, ep->d_name);
 			receive_string_from_client(sfd, ackdump); // Trick to chunk the write() calls
 		}
+		// Close the file
 		(void) closedir (dp);
 	}
+	// If file could not be opened, return -1
 	else {
 		perror("Couldn't open the directory\n");
 		return -1;
 	}
 
+	// Send a "goodbye" message to client
 	send_string_on_socket(sfd, "FTSERVBYE");
 
 	return 0; // success
 }
 
+
+/*******************************************************************************
+* int send_file_strings(int sfd, const char * file_name, int control_sfd)
+* Sends a text file identified by file_name using sfd, passing an ack or neg 
+* message to control_sfd so that client knows whether to receive an error msg
+* or the store the strings in a file
+*******************************************************************************/
 int send_file_strings(int sfd, const char * file_name, int control_sfd) {
 
 	char ackdump[10];
@@ -390,7 +364,12 @@ int send_file_strings(int sfd, const char * file_name, int control_sfd) {
 }
 
 
-// Cite: This function borrowed from Page 28 of Beej guide
+
+/*******************************************************************************
+* void *get_in_addr(struct sockaddr *sa)
+* Cite: This function borrowed from Page 28 of Beej guide
+* Returns a struct depending on the type of IP address acquired from getaddrinfo
+*******************************************************************************/
 void *get_in_addr(struct sockaddr *sa) {
 	if (sa->sa_family == AF_INET) {
 		return &(((struct sockaddr_in*)sa)->sin_addr);
@@ -398,6 +377,5 @@ void *get_in_addr(struct sockaddr *sa) {
 
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
-
 
 #endif
